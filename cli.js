@@ -24,10 +24,6 @@ if(process.argv.length < 3)
     const pathToEnv = resolve(process.cwd(), dotenv || ".env");
     require("dotenv").config({ path: pathToEnv });
 
-    // check if the migrations directory path is valid
-    if(!fs.existsSync(pathToMigrations))
-        throw new Error(`Directory at path: ${pathToMigrations} could not be found`);
-
     switch(cmd.toLowerCase()) {
         /*
         * Create a new migration
@@ -46,6 +42,9 @@ if(process.argv.length < 3)
             const newDir = resolve(pathToMigrations, migrationName);
             if(fs.existsSync(newDir))
                 throw new Error(`Migration: ${newDir} already exists`);
+
+            // create the root migrations directory if it doesn't exist yet
+            !fs.existsSync(pathToMigrations) && fs.mkdirSync(pathToMigrations);
 
             // make the directory and files
             fs.mkdirSync(newDir);
@@ -80,7 +79,14 @@ if(process.argv.length < 3)
     }
 })();
 
+/*
+* Commit or roll back all migrations up to a migration selected by the user
+* */
 async function commitOrRollback({pathToMigrations, prompt, getDirSubsetFunc, cmd}) {
+
+    // check if the migrations directory path is valid
+    if(!fs.existsSync(pathToMigrations))
+        throw new Error(`Directory at path: ${pathToMigrations} could not be found`);
 
     // create the migrations table and a cursor if it doesn't exist
     await pool.query(
@@ -120,8 +126,8 @@ async function commitOrRollback({pathToMigrations, prompt, getDirSubsetFunc, cmd
         console.log(prompt);
         const [{value: selected}] = await spawnSelection(subset);
         const newCursor = cmd === "commit"
-        ? dirNames.findIndex(d => d === subset[selected])
-        : dirNames.findIndex(d => d === subset[selected]) - 1;
+            ? dirNames.findIndex(d => d === subset[selected])
+            : dirNames.findIndex(d => d === subset[selected]) - 1;
 
         // select the migration sql files up to the specified point
         const migrationDirPaths = subset
@@ -152,6 +158,9 @@ async function commitOrRollback({pathToMigrations, prompt, getDirSubsetFunc, cmd
     }
 }
 
+/*
+* Prompt user for input
+* */
 function promptUser() {
     return new Promise(res => {
         process.stdin.resume();
@@ -160,6 +169,9 @@ function promptUser() {
     });
 }
 
+/*
+* Generate selection config from migration directory names
+* */
 function spawnSelection(dirs) {
     return new Promise((res, rej) => {
         const select = require("select-shell")({ multiSelect: false });
@@ -170,6 +182,9 @@ function spawnSelection(dirs) {
     });
 }
 
+/*
+* Promisifed filesystem helpers
+* */
 function readFileAsync(path) {
     return new Promise((res, rej) => {
         fs.readFile(path, "utf8", (err, data) => {
@@ -188,6 +203,9 @@ function readDirAsync(dir) {
     });
 }
 
+/*
+* Postgres client which logs all messages it receives
+* */
 async function debugClient() {
     const client = await pool.connect();
     client.connection.on("message", m => {
