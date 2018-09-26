@@ -1,0 +1,16 @@
+{
+    "name": "migres",
+    "version": "1.0.0",
+    "description": "Dead simple database migrations for PostgreSQL",
+    "main": "cli.js",
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "dotenv": "^6.0.0",
+        "pg": "^7.4.3",
+        "select-shell": "^1.1.2"
+    },
+    "bin": {
+        "migres": "./cli.js"
+    }
+}
