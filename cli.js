@@ -6,12 +6,7 @@ const fs = require("fs");
 const {Pool} = require("pg");
 const pool = new Pool();
 
-// quit early if the arguments supplied are incorrect
-if(process.argv.length < 3)
-    throw new Error(
-        "Incorrect usage of migrate. " +
-        "Expected: create|commit|rollback [path/to/migrations] [/path/to/.env]"
-    );
+const args = require("./parse-argv");
 
 // run async business logic
 (async function run() {
