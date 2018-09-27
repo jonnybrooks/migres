@@ -1,6 +1,8 @@
 # migres
 Dead simple database migrations for PostgreSQL
 
+[![NPM](https://nodei.co/npm/migres.png)](https://nodei.co/npm/migres/)
+
 ## Motivation
 I've never been a huge fan of ORM-y solutions for database migrations - I like extremely simple setups, requiring little to no configuration, that use pure SQL. This package essentially just automates what I had been doing by hand up til now, whilst adding some safeguards to prevent multiple redundant queries and errors of that nature.
 
