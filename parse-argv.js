@@ -1,4 +1,4 @@
-const filenameRgx = /^[\w\s\._-]+$/;
+const filenameRgx = /^[\\\/\w\s\._-]+$/;
 
 // configure the cli commands and options
 const commands = ["create", "commit", "rollback"];
@@ -17,9 +17,17 @@ const aliases = {
     "-p": "--prefix"
 };
 
+/*
+* Initial validation
+* */
 // quit early if the arguments supplied are insufficient
 if(process.argv.length < 3)
     throw new Error(`Incorrect usage of migres. "Expected: ${commands.join("|")} [options]`);
+
+// quit early if the command is invalid
+const cmd = process.argv[2];
+if(!commands.includes(cmd))
+    throw new Error(`Command is invalid. Got: ${cmd} Expected: ${commands.join(", ")}`)
 
 // iterator generator
 const iter = (function* () {
@@ -28,7 +36,9 @@ const iter = (function* () {
     }
 })();
 
-// parse the arguments
+/*
+* Parse the arguments
+* */
 while(true) {
     let {value: arg, done} = iter.next();
 
@@ -53,7 +63,7 @@ while(true) {
 
     // no value provided
     if(!value) {
-        throw new Error(`No value provided for arg ${arg} where one was expected}`);
+        throw new Error(`No value provided for arg ${arg} where one was expected`);
     }
 
     // invalid value provided
@@ -64,17 +74,18 @@ while(true) {
     options[arg].value = value;
 }
 
-// check if the arguments are valid for the given command
+/*
+* Verify mandatory fields are filled and overwrite empty values with defaults
+* */
+let exported = { cmd };
 for(const op in options) {
-    const cmd = process.argv[2];
-    if(!commands.includes(cmd))
-        throw new Error(`Command is invalid. Got: ${cmd} Expected: ${commands.join(", ")}`)
-
     // todo: don't continue over mandatory fields (future feature)
     // if(!options[op].value) continue;
 
-    // if the values are empty and there exists defaults, overwrite the values with them
     options[op].value = options[op].value || options[op].default;
+
+    // make the keys easier to reference by removing prefixed hyphens
+    exported[op.replace(/-/g, "")] = options[op].value;
 }
 
-module.exports = options;
+module.exports = exported;
